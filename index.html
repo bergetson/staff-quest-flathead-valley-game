@@ -1,0 +1,2889 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Quest: Flathead Valley</title>
+    <style>
+:root {
+  --ink: #17251f;
+  --ink-soft: #38483f;
+  --paper: #f3edc4;
+  --paper-bright: #fff7d8;
+  --field: #6fa66a;
+  --field-dark: #386345;
+  --gold: #d6a84f;
+  --rust: #b85f4a;
+  --sky: #7fb1b8;
+  --night: #263349;
+  --mint: #b8d982;
+  --panel: rgba(243, 237, 196, 0.96);
+  --shadow: rgba(10, 18, 16, 0.34);
+  --line: #15221d;
+  --pixel: 4px;
+  font-family: "Courier New", Courier, monospace;
+  color: var(--ink);
+  background: var(--night);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+body {
+  overflow: hidden;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(127, 177, 184, 0.34), transparent 30%),
+    linear-gradient(135deg, #1b2b25 0%, #263349 46%, #4b3c2f 100%);
+}
+
+button {
+  font: inherit;
+}
+
+#app-shell {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(8px, 1.8vw, 22px);
+}
+
+#game-card {
+  position: relative;
+  width: min(1160px, 100%);
+  height: min(720px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 286px;
+  gap: 14px;
+  background: linear-gradient(180deg, rgba(255, 247, 216, 0.12), rgba(0, 0, 0, 0.06));
+  border: var(--pixel) solid var(--line);
+  box-shadow: 0 20px 60px var(--shadow), inset 0 0 0 var(--pixel) rgba(255, 255, 255, 0.08);
+  padding: 14px;
+}
+
+#game-wrap {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #16241f;
+  border: var(--pixel) solid var(--line);
+  box-shadow: inset 0 0 0 var(--pixel) rgba(255, 255, 255, 0.08);
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+}
+
+#game canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  max-width: min(520px, 84%);
+  color: var(--paper-bright);
+  background: rgba(23, 37, 31, 0.92);
+  border: 3px solid var(--paper-bright);
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.24);
+  text-align: center;
+  line-height: 1.35;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+#hud {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--ink);
+}
+
+.hud-row,
+.mission-chip,
+.resource-grid,
+.stat-strip,
+.journal,
+.modal-panel,
+.start-panel,
+.brief-card {
+  border: var(--pixel) solid var(--line);
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.24), inset 0 0 0 2px rgba(255, 255, 255, 0.16);
+}
+
+.hud-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 10px 12px;
+  color: var(--paper-bright);
+  background: linear-gradient(135deg, var(--field-dark), #25445b);
+  text-transform: uppercase;
+  letter-spacing: 0;
+  font-weight: 900;
+}
+
+.icon-button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 3px solid var(--line);
+  color: var(--line);
+  background: var(--gold);
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.icon-button:hover,
+.icon-button:focus-visible,
+.choice-button:hover,
+.choice-button:focus-visible,
+.primary-button:hover,
+.primary-button:focus-visible,
+.secondary-button:hover,
+.secondary-button:focus-visible,
+.stat-step:hover,
+.stat-step:focus-visible {
+  filter: brightness(1.08);
+  outline: 3px solid var(--paper-bright);
+  outline-offset: 2px;
+}
+
+.mission-chip {
+  padding: 12px;
+  background: var(--panel);
+}
+
+.mission-chip strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--rust);
+  text-transform: uppercase;
+}
+
+.mission-chip p {
+  margin: 0;
+  line-height: 1.35;
+  font-size: 13px;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  background: rgba(255, 247, 216, 0.9);
+}
+
+.resource {
+  min-width: 0;
+  padding: 8px;
+  background: #f9d978;
+  border: 3px solid var(--line);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.13);
+}
+
+.resource:nth-child(2) {
+  background: #a9d783;
+}
+
+.resource:nth-child(3) {
+  background: #84bdc4;
+}
+
+.resource:nth-child(4) {
+  background: #e69270;
+}
+
+.resource span {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.resource b {
+  display: block;
+  margin-top: 2px;
+  font-size: 20px;
+}
+
+.stat-strip {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(23, 37, 31, 0.9);
+  color: var(--paper-bright);
+}
+
+.stat-pill {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+}
+
+.journal {
+  position: absolute;
+  top: 14px;
+  right: 314px;
+  z-index: 20;
+  width: min(420px, calc(100% - 330px));
+  max-height: calc(100% - 28px);
+  overflow: auto;
+  background: var(--panel);
+}
+
+.journal-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  color: var(--paper-bright);
+  background: var(--field-dark);
+  border-bottom: 3px solid var(--line);
+}
+
+.journal h2,
+.modal-panel h2,
+.start-panel h1,
+.start-panel h2 {
+  margin: 0;
+}
+
+#journal-body {
+  padding: 12px;
+}
+
+.journal-section {
+  margin-bottom: 14px;
+}
+
+.journal-section h3 {
+  margin: 0 0 8px;
+  color: var(--rust);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.journal-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-list li {
+  padding: 7px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(21, 34, 29, 0.45);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.modal-layer,
+.start-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 34px);
+  background: rgba(9, 16, 14, 0.62);
+  overflow-x: hidden;
+}
+
+.start-screen {
+  z-index: 60;
+  background:
+    linear-gradient(rgba(9, 16, 14, 0.7), rgba(9, 16, 14, 0.7)),
+    radial-gradient(circle at center, rgba(214, 168, 79, 0.28), transparent 42%),
+    linear-gradient(135deg, #386345, #263349);
+}
+
+.modal-panel,
+.start-panel {
+  width: min(1020px, 100%);
+  max-height: min(760px, calc(100vh - 24px));
+  overflow: auto;
+  background: var(--panel);
+}
+
+.modal-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.modal-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--rust);
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.dialogue-layout,
+.battle-layout {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.portrait {
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25% 50%, rgba(255, 255, 255, 0.2) 50% 75%, transparent 75%),
+    var(--sky);
+  background-size: 16px 16px;
+  border: var(--pixel) solid var(--line);
+}
+
+.portrait-sprite {
+  width: 54px;
+  height: 74px;
+  image-rendering: pixelated;
+  transform: scale(1.55);
+}
+
+.dialogue-text {
+  min-height: 104px;
+  padding: 12px;
+  color: var(--paper-bright);
+  background: var(--ink);
+  border: var(--pixel) solid var(--line);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+  line-height: 1.48;
+}
+
+.choice-grid,
+.battle-actions,
+.start-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.choice-button,
+.primary-button,
+.secondary-button,
+.stat-step {
+  border: 3px solid var(--line);
+  color: var(--line);
+  background: var(--gold);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.choice-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  text-align: left;
+  line-height: 1.3;
+}
+
+.choice-button.correct {
+  background: var(--mint);
+}
+
+.choice-button.danger {
+  background: var(--rust);
+  color: var(--paper-bright);
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 48px;
+  padding: 10px 16px;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.secondary-button {
+  background: var(--sky);
+}
+
+.battle-card {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 3px solid var(--line);
+}
+
+.battle-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.meter {
+  display: grid;
+  gap: 4px;
+}
+
+.meter-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.meter-track {
+  height: 18px;
+  background: var(--ink);
+  border: 3px solid var(--line);
+}
+
+.meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d9ef75, #f2b45e, #dc6b55);
+}
+
+.battle-log {
+  min-height: 120px;
+  max-height: 170px;
+  overflow: auto;
+  padding: 10px;
+  color: var(--paper-bright);
+  background: var(--ink);
+  border: 3px solid var(--line);
+  line-height: 1.35;
+  font-size: 13px;
+}
+
+.battle-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.start-panel {
+  padding: clamp(16px, 2.4vw, 24px);
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: var(--rust);
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.start-panel h1 {
+  max-width: 840px;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 0.95;
+  color: var(--ink);
+  text-shadow: 4px 4px 0 var(--gold);
+  overflow-wrap: anywhere;
+}
+
+.start-copy {
+  max-width: 840px;
+  font-size: clamp(15px, 1.8vw, 19px);
+  line-height: 1.45;
+  margin: 14px 0;
+}
+
+.start-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(270px, 0.65fr);
+  gap: 14px;
+  align-items: stretch;
+  margin-top: 12px;
+}
+
+.brief-card {
+  padding: 14px;
+  background: linear-gradient(180deg, #a9d783, #7fb1b8);
+}
+
+.brief-card ul {
+  padding-left: 18px;
+  line-height: 1.5;
+}
+
+.small-copy {
+  margin: 8px 0 12px;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+.points-left {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  color: var(--paper-bright);
+  background: var(--ink);
+  border: 3px solid var(--line);
+}
+
+.stat-builder {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat-build-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 3px solid var(--line);
+}
+
+.stat-build-row strong {
+  display: block;
+}
+
+.stat-build-row span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.stat-controls {
+  display: grid;
+  grid-template-columns: 32px 30px 32px;
+  gap: 5px;
+  align-items: center;
+  text-align: center;
+  font-weight: 900;
+}
+
+.stat-step {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.start-actions {
+  grid-template-columns: repeat(3, minmax(0, auto));
+  justify-content: start;
+  margin-top: 18px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  z-index: 80;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px));
+  padding: 10px 12px;
+  color: var(--paper-bright);
+  background: var(--ink);
+  border: 3px solid var(--paper-bright);
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow: auto;
+  }
+
+  #app-shell {
+    min-height: 100vh;
+    height: auto;
+    align-items: start;
+  }
+
+  #game-card {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  #game-wrap {
+    aspect-ratio: 5 / 3;
+    min-height: 320px;
+  }
+
+  #hud {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .journal {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .start-layout,
+  .dialogue-layout,
+  .battle-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-builder {
+    grid-template-columns: 1fr;
+  }
+
+  .portrait {
+    width: 100%;
+    height: 90px;
+  }
+
+  .battle-actions,
+  .start-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  #app-shell {
+    padding: 6px;
+  }
+
+  #game-card {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .resource-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .choice-button {
+    min-height: 56px;
+  }
+
+  .start-screen {
+    display: block;
+    align-items: start;
+    padding: 8px;
+  }
+
+  .start-panel {
+    width: min(360px, calc(100vw - 16px));
+    max-width: min(360px, calc(100vw - 16px));
+    padding: 14px;
+  }
+
+  .start-panel h1 {
+    font-size: 26px;
+  }
+
+  .start-panel,
+  .start-panel * {
+    min-width: 0;
+  }
+
+  .stat-build-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stat-controls {
+    justify-self: start;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <main id="app-shell">
+      <section id="game-card" aria-label="Staff Quest game">
+        <div id="game-wrap">
+          <div id="game"></div>
+          <div id="interaction-prompt" class="prompt" hidden></div>
+        </div>
+
+        <aside id="hud" aria-label="Game status">
+          <div class="hud-row hud-title">
+            <span>Staff Quest</span>
+            <button id="journal-toggle" class="icon-button" type="button" title="Open staff journal" aria-label="Open staff journal">J</button>
+          </div>
+          <div id="mission-chip" class="mission-chip"></div>
+          <div id="resource-grid" class="resource-grid"></div>
+          <div id="stat-strip" class="stat-strip"></div>
+        </aside>
+
+        <aside id="journal" class="journal" aria-label="Staff journal" hidden>
+          <div class="journal-head">
+            <h2>Staff Journal</h2>
+            <button id="journal-close" class="icon-button" type="button" title="Close journal" aria-label="Close journal">X</button>
+          </div>
+          <div id="journal-body"></div>
+        </aside>
+      </section>
+    </main>
+
+    <section id="start-screen" class="start-screen" aria-label="Start screen">
+      <div class="start-panel">
+        <p class="kicker">163rd Infantry Battalion training environment</p>
+        <h1>Staff Quest: Flathead Valley</h1>
+        <p class="start-copy">
+          CPT Berget reports to the TOC with a notebook, a radio that might work, and enough coffee to make one dangerous decision.
+        </p>
+        <div class="start-layout">
+          <div>
+            <h2>Build CPT Berget</h2>
+            <p class="small-copy">Spend your staff points. Every build can win, but the battles and puzzles will feel different.</p>
+            <div id="points-left" class="points-left"></div>
+            <div id="stat-builder" class="stat-builder"></div>
+          </div>
+          <div class="brief-card">
+            <h2>First Objective</h2>
+            <p>Find MAJ Pancheau in the command post and survive your first staff sync without volunteering for five extra slides.</p>
+            <ul>
+              <li>Move with WASD or arrow keys.</li>
+              <li>Interact with E, Space, or Enter.</li>
+              <li>Win missions by solving the staff problem, then defeating the friction event.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="start-actions">
+          <button id="start-button" class="primary-button" type="button">Begin Staff Tour</button>
+          <button id="continue-button" class="secondary-button" type="button" hidden>Continue Saved Game</button>
+          <button id="reset-save-button" class="secondary-button" type="button" hidden>Clear Save</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="modal-layer" class="modal-layer" aria-live="polite" hidden></section>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    <script type="module">
+const PLAYER_STATS = [
+  {
+    id: "logistics",
+    label: "Logistics",
+    short: "LOG",
+    description: "Commodity math, sustainment planning, and making the numbers survive contact."
+  },
+  {
+    id: "operations",
+    label: "Operations",
+    short: "OPS",
+    description: "Sequencing tasks, timelines, and knowing what must happen next."
+  },
+  {
+    id: "intelligence",
+    label: "Intelligence",
+    short: "INT",
+    description: "Reading the problem, sorting facts, and finding the threat hiding in plain sight."
+  },
+  {
+    id: "signal",
+    label: "Signal",
+    short: "SIG",
+    description: "Keeping comms, systems, and digital chaos from eating the plan."
+  },
+  {
+    id: "leadership",
+    label: "Leadership",
+    short: "LDR",
+    description: "Briefing clearly, building trust, and keeping the staff pointed at the same hill."
+  }
+];
+
+const NPCS = [
+  {
+    id: "pancheau",
+    name: "MAJ Pancheau",
+    role: "XO",
+    x: 392,
+    y: 164,
+    uniform: "#4f7f52",
+    accent: "#e6c35a",
+    hair: "#352317",
+    mission: "welcome",
+    clue: "The XO points at the map. 'A good staff officer is early, clear, and allergic to unowned problems.'"
+  },
+  {
+    id: "figarelle",
+    name: "LTC Figarelle",
+    role: "BC",
+    x: 520,
+    y: 146,
+    uniform: "#516a8a",
+    accent: "#f1f0d1",
+    hair: "#2e2723",
+    mission: "commander-update",
+    clue: "The BC wants the BLUF first. He can smell a wandering update through canvas walls."
+  },
+  {
+    id: "schaack",
+    name: "CPT Schaack",
+    role: "S1",
+    x: 206,
+    y: 232,
+    uniform: "#5f8d5a",
+    accent: "#d77a61",
+    hair: "#6f4528",
+    mission: "accountability",
+    clue: "S1 truth: names beat vibes. If the number changed, find the person who changed it."
+  },
+  {
+    id: "whitehead",
+    name: "CPT Whitehead",
+    role: "S3",
+    x: 346,
+    y: 224,
+    uniform: "#4f6f74",
+    accent: "#f4d47b",
+    hair: "#46321d",
+    mission: "timeline",
+    clue: "The S3 shop speaks fluent timeline. Put decisions before movement, rehearsals before execution, and blame nowhere."
+  },
+  {
+    id: "guthrie",
+    name: "LT Guthrie",
+    role: "S3 FUOPS",
+    x: 444,
+    y: 220,
+    uniform: "#55765b",
+    accent: "#8fc1d4",
+    hair: "#d1ad6a",
+    mission: "threat-brief",
+    clue: "FUOPS is tomorrow trying to warn today. Separate fact, assumption, and wishful thinking."
+  },
+  {
+    id: "halland",
+    name: "CPT Halland",
+    role: "S3 CUOPS",
+    x: 396,
+    y: 278,
+    uniform: "#6d6b4c",
+    accent: "#f09d51",
+    hair: "#2d2216",
+    mission: "convoy",
+    clue: "CUOPS is the fire desk. If everything is urgent, sort by commander priority and harm prevented."
+  },
+  {
+    id: "partridge",
+    name: "Chief Partridge",
+    role: "SASMO/S6",
+    x: 214,
+    y: 140,
+    uniform: "#3f776c",
+    accent: "#9ee493",
+    hair: "#2b2924",
+    mission: "comms",
+    clue: "Chief says the cable is innocent until proven guilty. Check power, crypto, frequency, and user confidence."
+  },
+  {
+    id: "cantrell",
+    name: "MAJ Cantrell",
+    role: "SPO",
+    x: 292,
+    y: 284,
+    uniform: "#77724a",
+    accent: "#d2e28b",
+    hair: "#4a3520",
+    mission: "commodities",
+    clue: "The SPO does math out loud. Round up when it protects the mission. Round down only if you enjoy bad news."
+  },
+  {
+    id: "bailey",
+    name: "SFC Bailey",
+    role: "NCOIC",
+    x: 686,
+    y: 254,
+    uniform: "#6a8a4f",
+    accent: "#c9a24e",
+    hair: "#3b2c20",
+    clue: "SFC Bailey has already fixed one problem you have not discovered yet."
+  },
+  {
+    id: "schuster",
+    name: "SSG Schuster",
+    role: "Plans Runner",
+    x: 618,
+    y: 410,
+    uniform: "#5f7f68",
+    accent: "#d66e56",
+    hair: "#6a3f25",
+    clue: "SSG Schuster carries three binders and the haunted look of someone who has seen a merged cell."
+  },
+  {
+    id: "bash",
+    name: "SSG Bash",
+    role: "Whiteboard Boss",
+    x: 756,
+    y: 206,
+    uniform: "#4c8064",
+    accent: "#ffffff",
+    hair: "#242424",
+    clue: "SSG Bash says every plan can fit on a whiteboard if your handwriting is brave enough."
+  },
+  {
+    id: "ray",
+    name: "SFC Ray",
+    role: "Movement NCO",
+    x: 826,
+    y: 468,
+    uniform: "#6c8152",
+    accent: "#e2b95f",
+    hair: "#5a4029",
+    clue: "SFC Ray knows the convoy answer before the map is unfolded."
+  },
+  {
+    id: "moritz",
+    name: "SSG Moritz",
+    role: "Supply",
+    x: 850,
+    y: 310,
+    uniform: "#64794c",
+    accent: "#91bdd3",
+    hair: "#8d6038",
+    clue: "SSG Moritz says the shortage is not real until it appears on three different trackers."
+  },
+  {
+    id: "lammy",
+    name: "SFC Lammy",
+    role: "Readiness",
+    x: 128,
+    y: 424,
+    uniform: "#667a53",
+    accent: "#e9db76",
+    hair: "#29231b",
+    clue: "SFC Lammy has a roster, a pencil, and no patience for magical headcounts."
+  },
+  {
+    id: "sgt-berget",
+    name: "SGT Berget",
+    role: "Field Expediter",
+    x: 474,
+    y: 446,
+    uniform: "#587e58",
+    accent: "#ef8f64",
+    hair: "#5c3928",
+    clue: "SGT Berget says the fastest route is the one with the fewest people asking what route you picked."
+  },
+  {
+    id: "moreni",
+    name: "General Moreni",
+    role: "Training Audience",
+    x: 934,
+    y: 136,
+    uniform: "#465f7f",
+    accent: "#f8d36b",
+    hair: "#303030",
+    mission: "friction-day",
+    clue: "General Moreni asks one quiet question and the whole TOC starts standing straighter."
+  },
+  {
+    id: "gibson",
+    name: "General Gibson",
+    role: "Observer",
+    x: 954,
+    y: 206,
+    uniform: "#4b6688",
+    accent: "#d9f2a3",
+    hair: "#222222",
+    clue: "General Gibson studies the map like it owes him an answer."
+  },
+  {
+    id: "dorval",
+    name: "General Dorval",
+    role: "Senior Mentor",
+    x: 926,
+    y: 278,
+    uniform: "#596f8c",
+    accent: "#f7c7a1",
+    hair: "#dad2bd",
+    clue: "General Dorval offers the dangerous kind of mentorship: the kind that starts with 'walk me through your assumptions.'"
+  },
+  {
+    id: "kimball",
+    name: "SGT Kimball",
+    role: "Comms Runner",
+    x: 588,
+    y: 126,
+    uniform: "#4a7c6c",
+    accent: "#9bd4e5",
+    hair: "#40281b",
+    clue: "SGT Kimball has the spare handset and the expression of someone guarding a national treasure."
+  },
+  {
+    id: "morgan",
+    name: "SPC Morgan",
+    role: "Map Tech",
+    x: 694,
+    y: 106,
+    uniform: "#577c57",
+    accent: "#e6e0a6",
+    hair: "#7a4d2a",
+    clue: "SPC Morgan can make a map overlay faster than most people can find the printer."
+  }
+];
+
+const MISSIONS = [
+  {
+    id: "welcome",
+    level: 1,
+    title: "Welcome to the TOC",
+    npc: "pancheau",
+    objective: "Report to MAJ Pancheau and learn how the staff turns chaos into a plan.",
+    lesson: "Staff officers clarify the problem before they sprint at the nearest task.",
+    intro: [
+      "CPT Berget, welcome to the TOC. It is canvas, coffee, and consequences.",
+      "Your first job is simple: understand the staff's purpose before the staff creates its own weather."
+    ],
+    puzzle: {
+      prompt: "The XO asks what you should do first when handed a vague tasker from the BC.",
+      answers: [
+        {
+          text: "Clarify intent, timeline, owner, and expected product.",
+          correct: true,
+          feedback: "Exactly. A staff officer turns fog into a task with an owner and a clock."
+        },
+        {
+          text: "Start a slide deck and hope the title becomes the answer.",
+          correct: false,
+          feedback: "Tempting, but a slide without intent is just camouflage for confusion."
+        },
+        {
+          text: "Ask every section for inputs with no format or suspense.",
+          correct: false,
+          feedback: "That creates a beautiful inbox problem, not a staff solution."
+        }
+      ]
+    },
+    battle: {
+      name: "First-Day Friction",
+      maxHp: 24,
+      weakness: "leadership",
+      attacks: [
+        "A mystery tasker lands with no suspense.",
+        "Three people say 'quick question' at the same time.",
+        "Someone asks if the sync can be moved five minutes after it starts."
+      ]
+    },
+    reward: { credibility: 5, coffee: 1, morale: 1 },
+    completion: "MAJ Pancheau nods. The staff has not caught fire. This counts as momentum."
+  },
+  {
+    id: "accountability",
+    level: 2,
+    title: "Accountability Scramble",
+    npc: "schaack",
+    objective: "Help CPT Schaack reconcile the PERSTAT before the command update.",
+    lesson: "Personnel reporting is a named list first and a number second.",
+    intro: [
+      "S1 has three trackers, two phone calls, and one number that refuses to behave.",
+      "CPT Schaack needs the present-for-duty count before the BC starts asking crisp questions."
+    ],
+    puzzle: {
+      prompt: "Alpha Company has 87 assigned. Four are attached in for training. Three are on leave, two are at sick call, and one is TDY. What is present for duty?",
+      answers: [
+        {
+          text: "85 present for duty.",
+          correct: true,
+          feedback: "Right: 87 + 4 - 3 - 2 - 1 = 85. The tracker exhales."
+        },
+        {
+          text: "91 present for duty.",
+          correct: false,
+          feedback: "That adds the attached soldiers but forgets the unavailable soldiers."
+        },
+        {
+          text: "81 present for duty.",
+          correct: false,
+          feedback: "Close enough to sound confident, which is the most dangerous kind of wrong."
+        }
+      ]
+    },
+    battle: {
+      name: "Rogue Spreadsheet",
+      maxHp: 30,
+      weakness: "leadership",
+      attacks: [
+        "A merged cell hides a squad.",
+        "The row labels shift one column to the right.",
+        "Someone says the number is 'basically right.'"
+      ]
+    },
+    reward: { credibility: 6, coffee: 1, morale: 1 },
+    completion: "CPT Schaack locks the roster. Somewhere, a formula stops screaming."
+  },
+  {
+    id: "threat-brief",
+    level: 3,
+    title: "Threat Brief Confusion",
+    npc: "guthrie",
+    objective: "Help LT Guthrie turn scattered reports into a useful S2/S3 picture.",
+    lesson: "Good analysis separates observed facts from assumptions and timing.",
+    intro: [
+      "LT Guthrie has patrol notes, drone screenshots, and one confident rumor with no source.",
+      "The staff needs a threat update that is useful, not dramatic."
+    ],
+    puzzle: {
+      prompt: "In a SALUTE report, which item best belongs in the Time field?",
+      answers: [
+        {
+          text: "0715 local, observed before the fog lifted.",
+          correct: true,
+          feedback: "Correct. Time tells the staff how stale or urgent the observation is."
+        },
+        {
+          text: "Two vehicles near the north trailhead.",
+          correct: false,
+          feedback: "That belongs closer to Size or Activity."
+        },
+        {
+          text: "Likely trying to disrupt chow because the universe is cruel.",
+          correct: false,
+          feedback: "That is an assessment. Useful later, but not the Time field."
+        }
+      ]
+    },
+    battle: {
+      name: "Mystery SIGACT",
+      maxHp: 34,
+      weakness: "intelligence",
+      attacks: [
+        "A rumor arrives wearing a fake mustache labeled 'fact.'",
+        "The map overlay is almost right, which is worse than wrong.",
+        "A timestamp is missing from the report."
+      ]
+    },
+    reward: { credibility: 7, coffee: 1, morale: 1 },
+    completion: "LT Guthrie pins the facts to the board. The assumptions have to stand in a separate corner."
+  },
+  {
+    id: "timeline",
+    level: 4,
+    title: "The Broken Timeline",
+    npc: "whitehead",
+    objective: "Help CPT Whitehead rebuild the training timeline before it collapses into calendar art.",
+    lesson: "Operations sequencing protects decisions, rehearsals, and execution.",
+    intro: [
+      "CPT Whitehead has a timeline with arrows, boxes, and one suspiciously optimistic rehearsal window.",
+      "The battalion needs a sequence that gives leaders time to understand and act."
+    ],
+    puzzle: {
+      prompt: "Which sequence is the strongest basic planning flow?",
+      answers: [
+        {
+          text: "Receive mission, analyze, develop COAs, issue order, rehearse, execute.",
+          correct: true,
+          feedback: "Right. This protects decisions and gives subordinate leaders time to prepare."
+        },
+        {
+          text: "Execute, rehearse, analyze, receive mission, then ask what happened.",
+          correct: false,
+          feedback: "That is less a timeline and more an after action review waiting to happen."
+        },
+        {
+          text: "Build the final slide first, then force reality to match it.",
+          correct: false,
+          feedback: "Reality has declined the invitation."
+        }
+      ]
+    },
+    battle: {
+      name: "Calendar Ambush",
+      maxHp: 42,
+      weakness: "operations",
+      attacks: [
+        "A briefing moves left with no warning.",
+        "The rehearsal gets compressed into a motivational thought.",
+        "Two critical events claim the same projector."
+      ]
+    },
+    reward: { credibility: 8, coffee: 1, morale: 1 },
+    completion: "CPT Whitehead drags the rehearsal back into existence. The calendar looks wounded but stable."
+  },
+  {
+    id: "commodities",
+    level: 5,
+    title: "Beans, Bullets, and Fuel",
+    npc: "cantrell",
+    objective: "Support MAJ Cantrell with realistic commodity math for the battalion.",
+    lesson: "Sustainment estimates need assumptions, math, and a reserve that is not imaginary.",
+    intro: [
+      "MAJ Cantrell has a marker in one hand and the look of someone about to ask for gallons.",
+      "The battalion needs water for a three-day field problem, plus a reserve."
+    ],
+    puzzle: {
+      prompt: "Estimate water for 600 soldiers at 2 gallons per soldier per day for 3 days, plus 10 percent reserve.",
+      answers: [
+        {
+          text: "3,960 gallons.",
+          correct: true,
+          feedback: "Correct: 600 x 2 x 3 = 3,600. Add 10 percent reserve for 3,960."
+        },
+        {
+          text: "3,600 gallons.",
+          correct: false,
+          feedback: "That covers the baseline, but not the reserve."
+        },
+        {
+          text: "1,800 gallons.",
+          correct: false,
+          feedback: "That is one and a half days of confidence wearing a three-day hat."
+        }
+      ]
+    },
+    battle: {
+      name: "Thirsty Battalion",
+      maxHp: 48,
+      weakness: "logistics",
+      attacks: [
+        "A water buffalo is reported full, empty, and 'probably fine.'",
+        "A reserve number tries to disappear from the estimate.",
+        "Someone asks if coffee counts as hydration."
+      ]
+    },
+    reward: { credibility: 9, coffee: 2, morale: 1 },
+    completion: "MAJ Cantrell circles the answer. Sustainment is now slightly less haunted."
+  },
+  {
+    id: "comms",
+    level: 6,
+    title: "Comms Are Down",
+    npc: "partridge",
+    objective: "Help Chief Partridge restore the TOC network without creating six new mysteries.",
+    lesson: "Signal troubleshooting starts with basics before heroic reconstruction.",
+    intro: [
+      "Chief Partridge does not look surprised. This is either comforting or terrifying.",
+      "The net is down between the TOC and CTCP. The fix needs discipline, not panic."
+    ],
+    puzzle: {
+      prompt: "What is the best first troubleshooting sequence for a failed radio link?",
+      answers: [
+        {
+          text: "Check power, fill/crypto, frequency, antenna, then shift to the alternate plan.",
+          correct: true,
+          feedback: "Correct. Basics first, then the PACE plan."
+        },
+        {
+          text: "Replace every cable, accuse the weather, and reboot the universe.",
+          correct: false,
+          feedback: "A classic move, but it creates more variables than it solves."
+        },
+        {
+          text: "Wait until the next sync and brief it as an emerging opportunity.",
+          correct: false,
+          feedback: "The net remains unimpressed by optimism."
+        }
+      ]
+    },
+    battle: {
+      name: "Radio Silence",
+      maxHp: 54,
+      weakness: "signal",
+      attacks: [
+        "Static eats the first half of a report.",
+        "A handset is on the wrong net with complete confidence.",
+        "The alternate channel exists only in someone's memory."
+      ]
+    },
+    reward: { credibility: 10, coffee: 1, morale: 1 },
+    completion: "Chief Partridge gives the smallest possible approving nod. The network immediately behaves better."
+  },
+  {
+    id: "commander-update",
+    level: 7,
+    title: "The Commander's Update",
+    npc: "figarelle",
+    objective: "Build a clear update for LTC Figarelle under time pressure.",
+    lesson: "A useful update starts with the BLUF, risks, decisions, and next actions.",
+    intro: [
+      "LTC Figarelle enters the TOC and the air becomes professionally silent.",
+      "You have one update to show the staff understands what matters."
+    ],
+    puzzle: {
+      prompt: "Which opening gives the commander the best staff update?",
+      answers: [
+        {
+          text: "BLUF, current status, key risks, decisions needed, next actions.",
+          correct: true,
+          feedback: "Correct. The commander gets the fight, the risk, and the decision space."
+        },
+        {
+          text: "A full history of how the tracker became this color.",
+          correct: false,
+          feedback: "Context matters, but not before the commander knows why it matters."
+        },
+        {
+          text: "Read every bullet exactly as written so nobody feels left out.",
+          correct: false,
+          feedback: "The staff appreciates fairness. The clock does not."
+        }
+      ]
+    },
+    battle: {
+      name: "Slide Deck Avalanche",
+      maxHp: 60,
+      weakness: "leadership",
+      attacks: [
+        "A backup slide demands to become the main effort.",
+        "A chart axis uses vibes instead of units.",
+        "The phrase 'bottom line up front' is discovered halfway through the brief."
+      ]
+    },
+    reward: { credibility: 11, coffee: 1, morale: 2 },
+    completion: "LTC Figarelle has no follow-up questions for three full seconds. The TOC recognizes a miracle."
+  },
+  {
+    id: "convoy",
+    level: 8,
+    title: "Convoy Support Puzzle",
+    npc: "halland",
+    objective: "Integrate CUOPS and SPO data to support a Flathead Valley convoy.",
+    lesson: "Movement planning combines distance, fuel, risk, comms, and command priorities.",
+    intro: [
+      "CPT Halland has the current fight. MAJ Cantrell has fuel math. The convoy has a suspense.",
+      "Your job is to make the plan survive both the route and the update brief."
+    ],
+    puzzle: {
+      prompt: "A convoy has five HMMWVs at 8 mpg and two LMTVs at 6 mpg for a 120-mile round trip. Add 20 percent fuel reserve. What should you plan?",
+      answers: [
+        {
+          text: "138 gallons.",
+          correct: true,
+          feedback: "Correct. HMMWVs need 75, LMTVs need 40, total 115. Add 20 percent for 138."
+        },
+        {
+          text: "115 gallons.",
+          correct: false,
+          feedback: "That is the baseline. The reserve stayed in the motor pool."
+        },
+        {
+          text: "204 gallons.",
+          correct: false,
+          feedback: "That is safe, but it may create a new problem somewhere else."
+        }
+      ]
+    },
+    battle: {
+      name: "Route Sync Storm",
+      maxHp: 68,
+      weakness: "operations",
+      attacks: [
+        "The route changes after the fuel estimate is briefed.",
+        "A checkpoint report arrives with no grid.",
+        "The convoy wants comms, fuel, and a miracle in the same sentence."
+      ]
+    },
+    reward: { credibility: 12, coffee: 1, morale: 1 },
+    completion: "CPT Halland updates the common operating picture. The convoy looks suspiciously supportable."
+  },
+  {
+    id: "friction-day",
+    level: 9,
+    title: "Flathead Valley Friction Day",
+    npc: "moreni",
+    objective: "Survive a multi-section training inject with senior observers watching.",
+    lesson: "When everything is loud, sort by commander priority, risk, and time sensitivity.",
+    intro: [
+      "General Moreni steps into the TOC with a notebook. Nobody knows why the notebook is scarier than shouting.",
+      "Multiple problems arrive at once. The staff needs calm prioritization."
+    ],
+    puzzle: {
+      prompt: "Four issues hit at once: possible casualty report, comms outage with a company, late chow, and slide formatting. What leads?",
+      answers: [
+        {
+          text: "Casualty/accountability and comms first; delegate chow; formatting waits.",
+          correct: true,
+          feedback: "Correct. People, command and control, sustainment, then cosmetics."
+        },
+        {
+          text: "Fix slide formatting first so the chaos looks professional.",
+          correct: false,
+          feedback: "A tidy slide cannot command a disconnected company."
+        },
+        {
+          text: "Handle late chow first because hungry people brief with their eyes.",
+          correct: false,
+          feedback: "Important, but not ahead of casualty/accountability or comms."
+        }
+      ]
+    },
+    battle: {
+      name: "Competing Priorities",
+      maxHp: 76,
+      weakness: "leadership",
+      attacks: [
+        "Three valid problems demand to be first.",
+        "A senior observer asks a question that removes all hiding places.",
+        "A rumor tries to outrank confirmed information."
+      ]
+    },
+    reward: { credibility: 14, coffee: 2, morale: 2 },
+    completion: "General Moreni writes something down and smiles. Nobody knows what it means, but the staff is still standing."
+  },
+  {
+    id: "final-sync",
+    level: 10,
+    title: "The Battalion Sync",
+    npc: "pancheau",
+    objective: "Lead the final staff sync and prove CPT Berget can run the fight.",
+    lesson: "Staff leadership integrates sections into decisions the commander can use.",
+    intro: [
+      "MAJ Pancheau steps aside from the map. The staff turns to you.",
+      "Run the sync. Keep it clear. Keep it useful. Do not let the meeting become a weather system."
+    ],
+    puzzle: {
+      prompt: "What is the strongest final sync structure?",
+      answers: [
+        {
+          text: "Mission status, enemy/update, friendly actions, sustainment, signal, risks, decisions.",
+          correct: true,
+          feedback: "Correct. The structure gives the commander understanding, risk, and decisions."
+        },
+        {
+          text: "Let every section brief until they feel complete.",
+          correct: false,
+          feedback: "Completion is not the same as usefulness."
+        },
+        {
+          text: "Start with jokes, then ask if anyone has anything.",
+          correct: false,
+          feedback: "Morale matters, but an open-ended sync is how calendars learn violence."
+        }
+      ]
+    },
+    battle: {
+      name: "The Staff Sync",
+      maxHp: 90,
+      weakness: "operations",
+      attacks: [
+        "A section briefs a problem without a recommendation.",
+        "The decision point hides behind a paragraph.",
+        "A late update tries to derail the whole meeting.",
+        "Someone says 'just to caveat' and the room braces."
+      ]
+    },
+    reward: { credibility: 20, coffee: 3, morale: 3 },
+    completion: "The sync ends with decisions, owners, and no unnecessary sequel. CPT Berget has earned the staff's trust."
+  }
+];
+
+const RANDOM_ENCOUNTERS = [
+  {
+    name: "Printer Queue Mutiny",
+    maxHp: 22,
+    weakness: "signal",
+    reward: { credibility: 2, coffee: 0, morale: 0 },
+    attacks: [
+      "The printer accepts the job and refuses the paper.",
+      "A toner message appears with strategic timing."
+    ]
+  },
+  {
+    name: "Whiteboard Ambush",
+    maxHp: 26,
+    weakness: "operations",
+    reward: { credibility: 2, coffee: 0, morale: 0 },
+    attacks: [
+      "A box appears with no arrow.",
+      "A suspense is written sideways."
+    ]
+  },
+  {
+    name: "Unclaimed Tasker",
+    maxHp: 24,
+    weakness: "leadership",
+    reward: { credibility: 2, coffee: 1, morale: 0 },
+    attacks: [
+      "The tasker asks to be loved by everyone and owned by no one.",
+      "A reply-all storm forms on the horizon."
+    ]
+  }
+];
+
+
+const Phaser = window.Phaser;
+const TILE = 16;
+const WORLD_WIDTH = 1024;
+const WORLD_HEIGHT = 640;
+const STARTING_POINTS = 8;
+const SAVE_KEY = "staff-quest-flathead-valley-save";
+
+const dom = {
+  start: document.getElementById("start-screen"),
+  statBuilder: document.getElementById("stat-builder"),
+  pointsLeft: document.getElementById("points-left"),
+  startButton: document.getElementById("start-button"),
+  continueButton: document.getElementById("continue-button"),
+  resetSaveButton: document.getElementById("reset-save-button"),
+  missionChip: document.getElementById("mission-chip"),
+  resourceGrid: document.getElementById("resource-grid"),
+  statStrip: document.getElementById("stat-strip"),
+  prompt: document.getElementById("interaction-prompt"),
+  modal: document.getElementById("modal-layer"),
+  journal: document.getElementById("journal"),
+  journalToggle: document.getElementById("journal-toggle"),
+  journalClose: document.getElementById("journal-close"),
+  journalBody: document.getElementById("journal-body")
+};
+
+const byId = (items) => new Map(items.map((item) => [item.id, item]));
+const npcById = byId(NPCS);
+const missionById = byId(MISSIONS);
+let activeScene = null;
+let activeBattle = null;
+let draftStats = makeBaseStats();
+let state = normalizeState(loadState());
+
+const BATTLE_ACTIONS = [
+  {
+    id: "coordinate",
+    label: "Coordinate",
+    stat: "operations",
+    description: "Set owners, sequence tasks, and protect the suspense.",
+    base: 6
+  },
+  {
+    id: "calculate",
+    label: "Calculate",
+    stat: "logistics",
+    description: "Use sustainment math and assumptions that can survive questions.",
+    base: 6
+  },
+  {
+    id: "analyze",
+    label: "Analyze",
+    stat: "intelligence",
+    description: "Separate facts, assumptions, timing, and risk.",
+    base: 6
+  },
+  {
+    id: "signal",
+    label: "Signal Check",
+    stat: "signal",
+    description: "Restore comms discipline and apply the PACE plan.",
+    base: 6
+  },
+  {
+    id: "brief",
+    label: "Command Voice",
+    stat: "leadership",
+    description: "Deliver the BLUF, assign ownership, and steady the room.",
+    base: 6
+  },
+  {
+    id: "coffee",
+    label: "Coffee Push",
+    stat: null,
+    description: "Spend one coffee to recover focus.",
+    base: 0
+  }
+];
+
+function makeBaseStats() {
+  return Object.fromEntries(PLAYER_STATS.map((stat) => [stat.id, 1]));
+}
+
+function createFreshState() {
+  return {
+    started: false,
+    completed: [],
+    missionIndex: 0,
+    credibility: 0,
+    morale: 8,
+    tempo: 100,
+    coffee: 3,
+    stats: makeBaseStats(),
+    player: { x: 150, y: 178 },
+    wrongAnswers: {},
+    seenIntro: false,
+    finalShown: false,
+    modalOpen: false
+  };
+}
+
+function normalizeState(saved) {
+  const fresh = createFreshState();
+  if (!saved || typeof saved !== "object") {
+    return fresh;
+  }
+
+  const mergedStats = { ...fresh.stats, ...(saved.stats || {}) };
+  const missionIndex = Math.min(
+    Math.max(Number(saved.missionIndex) || 0, 0),
+    MISSIONS.length
+  );
+
+  return {
+    ...fresh,
+    ...saved,
+    stats: mergedStats,
+    missionIndex,
+    completed: Array.isArray(saved.completed) ? saved.completed.filter((id) => missionById.has(id)) : [],
+    player: {
+      x: Number(saved.player?.x) || fresh.player.x,
+      y: Number(saved.player?.y) || fresh.player.y
+    },
+    modalOpen: false
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveState() {
+  if (!state.started) {
+    return;
+  }
+
+  const safeState = { ...state, modalOpen: false };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(safeState));
+}
+
+function clearSave() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function clamp(number, min, max) {
+  return Math.max(min, Math.min(max, number));
+}
+
+function randomBetween(min, max) {
+  if (activeScene) {
+    return Phaser.Math.Between(min, max);
+  }
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function currentMission() {
+  return MISSIONS[state.missionIndex] || null;
+}
+
+function statLabel(statId) {
+  return PLAYER_STATS.find((stat) => stat.id === statId)?.label || statId;
+}
+
+function drawPerson(ctx, colors, facing = "down") {
+  ctx.clearRect(0, 0, 16, 22);
+  ctx.imageSmoothingEnabled = false;
+  const skin = colors.skin || "#c98f63";
+  const hair = colors.hair || "#3a2a1a";
+  const uniform = colors.uniform || "#5f8d5a";
+  const dark = colors.dark || "#263728";
+  const accent = colors.accent || "#e6c35a";
+  const boot = "#1a1714";
+  const line = "rgba(0, 0, 0, 0.42)";
+
+  const rect = (x, y, w, h, color) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+  };
+
+  rect(5, 0, 6, 2, hair);
+  rect(4, 2, 8, 5, facing === "up" ? hair : skin);
+  rect(3, 3, 2, 4, hair);
+  rect(11, 3, 2, 4, hair);
+  if (facing === "down") {
+    rect(6, 4, 1, 1, "#171717");
+    rect(10, 4, 1, 1, "#171717");
+  }
+  if (facing === "side") {
+    rect(10, 4, 1, 1, "#171717");
+  }
+
+  rect(4, 7, 8, 8, uniform);
+  rect(3, 8, 2, 6, uniform);
+  rect(11, 8, 2, 6, uniform);
+  rect(6, 8, 4, 2, accent);
+  rect(4, 14, 3, 5, dark);
+  rect(9, 14, 3, 5, dark);
+  rect(3, 19, 4, 2, boot);
+  rect(9, 19, 4, 2, boot);
+  rect(4, 21, 9, 1, line);
+}
+
+function makePortrait(colors, facing = "down") {
+  const canvas = document.createElement("canvas");
+  canvas.width = 16;
+  canvas.height = 22;
+  drawPerson(canvas.getContext("2d"), colors, facing);
+  return canvas.toDataURL("image/png");
+}
+
+function playerColors() {
+  return {
+    uniform: "#5f8d5a",
+    accent: "#f0c65a",
+    hair: "#5a3925",
+    skin: "#c88b62",
+    dark: "#334234"
+  };
+}
+
+const portraits = new Map(
+  NPCS.map((npc) => [npc.id, makePortrait(npc)])
+);
+portraits.set("player", makePortrait(playerColors()));
+
+function renderStatBuilder() {
+  const pointsSpent = Object.values(draftStats).reduce((sum, value) => sum + value - 1, 0);
+  const pointsLeft = STARTING_POINTS - pointsSpent;
+  dom.pointsLeft.textContent = `${pointsLeft} staff points left`;
+  dom.startButton.disabled = pointsLeft !== 0;
+
+  dom.statBuilder.innerHTML = PLAYER_STATS.map((stat) => `
+    <div class="stat-build-row">
+      <div>
+        <strong>${escapeHtml(stat.label)}</strong>
+        <span>${escapeHtml(stat.description)}</span>
+      </div>
+      <div class="stat-controls" aria-label="${escapeHtml(stat.label)} points">
+        <button class="stat-step" type="button" data-stat="${escapeHtml(stat.id)}" data-dir="-1" ${draftStats[stat.id] <= 1 ? "disabled" : ""}>-</button>
+        <b>${draftStats[stat.id]}</b>
+        <button class="stat-step" type="button" data-stat="${escapeHtml(stat.id)}" data-dir="1" ${pointsLeft <= 0 || draftStats[stat.id] >= 5 ? "disabled" : ""}>+</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateStartButtons() {
+  const saved = normalizeState(loadState());
+  const hasSave = saved.started;
+  dom.continueButton.hidden = !hasSave;
+  dom.resetSaveButton.hidden = !hasSave;
+}
+
+function beginNewGame() {
+  state = createFreshState();
+  state.started = true;
+  state.stats = { ...draftStats };
+  state.modalOpen = false;
+  dom.start.hidden = true;
+  updateHud();
+  updateJournal();
+  saveState();
+  activeScene?.resetPlayerPosition(state.player.x, state.player.y);
+  showToast("CPT Berget enters the TOC. Find MAJ Pancheau.");
+}
+
+function continueSavedGame() {
+  state = normalizeState(loadState());
+  state.started = true;
+  dom.start.hidden = true;
+  updateHud();
+  updateJournal();
+  activeScene?.resetPlayerPosition(state.player.x, state.player.y);
+  activeScene?.refreshMissionMarker();
+  showToast("Saved staff tour resumed.");
+}
+
+function resetToStart() {
+  clearSave();
+  state = createFreshState();
+  draftStats = makeBaseStats();
+  renderStatBuilder();
+  updateStartButtons();
+  dom.start.hidden = false;
+  updateHud();
+  updateJournal();
+  activeScene?.resetPlayerPosition(state.player.x, state.player.y);
+  showToast("Save cleared. Build CPT Berget again.");
+}
+
+function setPrompt(text) {
+  if (!text) {
+    dom.prompt.hidden = true;
+    dom.prompt.textContent = "";
+    return;
+  }
+  dom.prompt.hidden = false;
+  dom.prompt.textContent = text;
+}
+
+function setModalOpen(open) {
+  state.modalOpen = open;
+  dom.modal.hidden = !open;
+  if (!open) {
+    dom.modal.innerHTML = "";
+    activeBattle = null;
+  }
+}
+
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  document.body.append(toast);
+  window.setTimeout(() => toast.remove(), 2600);
+}
+
+function modalShell({ kicker = "", title = "", body = "" }) {
+  dom.modal.innerHTML = `
+    <article class="modal-panel">
+      <div class="modal-topline">
+        <span>${escapeHtml(kicker)}</span>
+        <button class="icon-button" type="button" data-close-modal title="Close" aria-label="Close">X</button>
+      </div>
+      ${title ? `<h2>${escapeHtml(title)}</h2>` : ""}
+      ${body}
+    </article>
+  `;
+  setModalOpen(true);
+
+  const close = dom.modal.querySelector("[data-close-modal]");
+  close?.addEventListener("click", () => setModalOpen(false));
+}
+
+function showDialogue(npcId) {
+  const npc = npcById.get(npcId);
+  if (!npc) {
+    return;
+  }
+
+  const mission = currentMission();
+  if (mission && mission.npc === npc.id) {
+    showMissionDialogue(npc, mission);
+    return;
+  }
+
+  const completedMission = npc.mission ? missionById.get(npc.mission) : null;
+  const completedText = completedMission && state.completed.includes(completedMission.id)
+    ? `${completedMission.title} is complete. ${npc.name} looks about 12 percent less burdened.`
+    : npc.clue;
+
+  showDialogueBox({
+    speaker: npc.name,
+    role: npc.role,
+    portrait: portraits.get(npc.id),
+    lines: [completedText],
+    choices: [
+      {
+        label: "Ask for a staff tip",
+        action: () => showDialogueBox({
+          speaker: npc.name,
+          role: npc.role,
+          portrait: portraits.get(npc.id),
+          lines: [npc.clue],
+          choices: [{ label: "Back to the TOC", action: () => setModalOpen(false) }]
+        })
+      },
+      { label: "Back to the TOC", action: () => setModalOpen(false) }
+    ]
+  });
+}
+
+function showMissionDialogue(npc, mission) {
+  const lines = mission.intro;
+  const levelText = `Level ${mission.level}: ${mission.title}`;
+  showDialogueBox({
+    speaker: npc.name,
+    role: npc.role,
+    portrait: portraits.get(npc.id),
+    kicker: levelText,
+    lines,
+    choices: [
+      {
+        label: "Take the mission",
+        action: () => showPuzzle(mission)
+      },
+      {
+        label: "Ask for the lesson",
+        action: () => showDialogueBox({
+          speaker: npc.name,
+          role: npc.role,
+          portrait: portraits.get(npc.id),
+          kicker: levelText,
+          lines: [mission.lesson],
+          choices: [
+            { label: "Start the staff problem", action: () => showPuzzle(mission) },
+            { label: "Back to the TOC", action: () => setModalOpen(false) }
+          ]
+        })
+      },
+      { label: "Back to the TOC", action: () => setModalOpen(false) }
+    ]
+  });
+}
+
+function showDialogueBox({ speaker, role, portrait, lines, choices, kicker = "Conversation" }) {
+  modalShell({
+    kicker,
+    title: speaker,
+    body: `
+      <div class="dialogue-layout">
+        <div class="portrait">
+          <img class="portrait-sprite" src="${portrait}" alt="" />
+        </div>
+        <div>
+          <div class="modal-topline"><span>${escapeHtml(role)}</span></div>
+          <div class="dialogue-text">${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>
+        </div>
+      </div>
+      <div class="choice-grid" data-choice-grid></div>
+    `
+  });
+
+  const grid = dom.modal.querySelector("[data-choice-grid]");
+  choices.forEach((choice, index) => {
+    const button = document.createElement("button");
+    button.className = "choice-button";
+    button.type = "button";
+    button.textContent = choice.label;
+    button.dataset.choice = String(index);
+    button.addEventListener("click", choice.action);
+    grid.append(button);
+  });
+}
+
+function showPuzzle(mission, feedback = "") {
+  modalShell({
+    kicker: `Level ${mission.level} Staff Problem`,
+    title: mission.title,
+    body: `
+      <div class="dialogue-text">
+        <p>${escapeHtml(mission.objective)}</p>
+        <p>${escapeHtml(mission.puzzle.prompt)}</p>
+        ${feedback ? `<p>${escapeHtml(feedback)}</p>` : ""}
+      </div>
+      <div class="choice-grid" data-answer-grid></div>
+    `
+  });
+
+  const grid = dom.modal.querySelector("[data-answer-grid]");
+  mission.puzzle.answers.forEach((answer) => {
+    const button = document.createElement("button");
+    button.className = "choice-button";
+    button.type = "button";
+    button.textContent = answer.text;
+    button.addEventListener("click", () => handlePuzzleAnswer(mission, answer));
+    grid.append(button);
+  });
+}
+
+function handlePuzzleAnswer(mission, answer) {
+  if (answer.correct) {
+    showDialogueBox({
+      speaker: missionById.get(mission.id)?.title || mission.title,
+      role: "Staff Problem Solved",
+      portrait: portraits.get("player"),
+      kicker: "Correct",
+      lines: [answer.feedback, "The friction event has noticed your competence and would like to object."],
+      choices: [
+        {
+          label: `Enter battle: ${mission.battle.name}`,
+          action: () => startBattle(mission.battle, mission)
+        }
+      ]
+    });
+    return;
+  }
+
+  state.tempo = clamp(state.tempo - 4, 0, 999);
+  state.morale = clamp(state.morale - 1, 0, 99);
+  state.wrongAnswers[mission.id] = (state.wrongAnswers[mission.id] || 0) + 1;
+  updateHud();
+  saveState();
+  showPuzzle(mission, `${answer.feedback} Tempo -4, Morale -1. Try the staff problem again.`);
+}
+
+function startBattle(battleConfig, mission = null) {
+  const level = mission?.level || Math.max(1, state.missionIndex + 1);
+  const wrongPenalty = mission ? (state.wrongAnswers[mission.id] || 0) * 3 : 0;
+  const focusMax = 24 + state.stats.leadership * 4 + Math.floor(state.morale / 2);
+  activeBattle = {
+    missionId: mission?.id || null,
+    name: battleConfig.name,
+    maxHp: battleConfig.maxHp + wrongPenalty,
+    hp: battleConfig.maxHp + wrongPenalty,
+    weakness: battleConfig.weakness,
+    attacks: battleConfig.attacks,
+    reward: mission?.reward || battleConfig.reward || { credibility: 0, coffee: 0, morale: 0 },
+    level,
+    focusMax,
+    focus: focusMax,
+    log: [
+      `${battleConfig.name} appears.`,
+      `Weak point hint: ${statLabel(battleConfig.weakness)}.`
+    ],
+    locked: false
+  };
+  renderBattle();
+}
+
+function renderBattle() {
+  if (!activeBattle) {
+    return;
+  }
+
+  const enemyPct = clamp((activeBattle.hp / activeBattle.maxHp) * 100, 0, 100);
+  const focusPct = clamp((activeBattle.focus / activeBattle.focusMax) * 100, 0, 100);
+
+  modalShell({
+    kicker: activeBattle.missionId ? "Friction Battle" : "Roaming Friction",
+    title: activeBattle.name,
+    body: `
+      <div class="battle-layout">
+        <div class="portrait">
+          <div class="battle-card" aria-hidden="true">
+            <div style="font-size: 42px; line-height: 1; text-align: center;">!</div>
+            <div style="font-size: 11px; text-align: center; margin-top: 8px;">FRICTION</div>
+          </div>
+        </div>
+        <div class="battle-bars">
+          <div class="meter">
+            <div class="meter-label"><span>${escapeHtml(activeBattle.name)}</span><span>${Math.max(0, activeBattle.hp)} / ${activeBattle.maxHp}</span></div>
+            <div class="meter-track"><div class="meter-fill" style="width: ${enemyPct}%"></div></div>
+          </div>
+          <div class="meter">
+            <div class="meter-label"><span>CPT Berget Focus</span><span>${Math.max(0, activeBattle.focus)} / ${activeBattle.focusMax}</span></div>
+            <div class="meter-track"><div class="meter-fill" style="width: ${focusPct}%"></div></div>
+          </div>
+          <div class="battle-log">${activeBattle.log.slice(-6).map((entry) => `<p>${escapeHtml(entry)}</p>`).join("")}</div>
+        </div>
+      </div>
+      <div class="battle-actions" data-battle-actions></div>
+    `
+  });
+
+  const grid = dom.modal.querySelector("[data-battle-actions]");
+  BATTLE_ACTIONS.forEach((action) => {
+    const button = document.createElement("button");
+    button.className = "choice-button";
+    button.type = "button";
+    button.disabled = activeBattle.locked || (action.id === "coffee" && state.coffee <= 0);
+    const statText = action.stat ? `${PLAYER_STATS.find((stat) => stat.id === action.stat).short} ${state.stats[action.stat]}` : `${state.coffee} left`;
+    button.innerHTML = `<strong>${escapeHtml(action.label)}</strong><br><span>${escapeHtml(statText)} - ${escapeHtml(action.description)}</span>`;
+    button.addEventListener("click", () => takeBattleAction(action));
+    grid.append(button);
+  });
+}
+
+function takeBattleAction(action) {
+  if (!activeBattle || activeBattle.locked) {
+    return;
+  }
+
+  activeBattle.locked = true;
+
+  if (action.id === "coffee") {
+    if (state.coffee <= 0) {
+      activeBattle.log.push("The coffee pouch is empty. This is not ideal.");
+    } else {
+      state.coffee -= 1;
+      const heal = 9 + state.stats.leadership;
+      activeBattle.focus = clamp(activeBattle.focus + heal, 0, activeBattle.focusMax);
+      activeBattle.log.push(`CPT Berget uses a Coffee Push and recovers ${heal} focus.`);
+    }
+  } else {
+    const statValue = state.stats[action.stat] || 1;
+    const weaknessBonus = activeBattle.weakness === action.stat ? 8 + statValue : -1;
+    const credibilityBonus = Math.floor(state.credibility / 25);
+    const damage = Math.max(3, action.base + statValue * 3 + weaknessBonus + credibilityBonus + randomBetween(0, 3));
+    activeBattle.hp = clamp(activeBattle.hp - damage, 0, activeBattle.maxHp);
+    const hitNote = activeBattle.weakness === action.stat ? " It hits the weak point." : "";
+    activeBattle.log.push(`${action.label} deals ${damage} staff damage.${hitNote}`);
+  }
+
+  if (activeBattle.hp <= 0) {
+    winBattle();
+    return;
+  }
+
+  const attack = activeBattle.attacks[randomBetween(0, activeBattle.attacks.length - 1)];
+  const mitigation = Math.floor((state.stats.leadership + state.stats.operations) / 3);
+  const damage = Math.max(2, 5 + Math.floor(activeBattle.level / 2) + randomBetween(0, 4) - mitigation);
+  activeBattle.focus = clamp(activeBattle.focus - damage, 0, activeBattle.focusMax);
+  activeBattle.log.push(`${attack} Focus -${damage}.`);
+
+  if (activeBattle.focus <= 0) {
+    loseBattle();
+    return;
+  }
+
+  activeBattle.locked = false;
+  updateHud();
+  saveState();
+  renderBattle();
+}
+
+function winBattle() {
+  if (!activeBattle) {
+    return;
+  }
+
+  const battle = activeBattle;
+  state.credibility += battle.reward.credibility || 0;
+  state.coffee += battle.reward.coffee || 0;
+  state.morale = clamp(state.morale + (battle.reward.morale || 0), 0, 99);
+  state.tempo = clamp(state.tempo + 1, 0, 999);
+  updateHud();
+
+  if (battle.missionId) {
+    completeMission(battle.missionId);
+    return;
+  }
+
+  showDialogueBox({
+    speaker: battle.name,
+    role: "Friction Defeated",
+    portrait: portraits.get("player"),
+    kicker: "Victory",
+    lines: [
+      `You gained ${battle.reward.credibility || 0} credibility${battle.reward.coffee ? ` and ${battle.reward.coffee} coffee` : ""}.`,
+      "The TOC returns to its normal level of dramatic lighting."
+    ],
+    choices: [{ label: "Back to the TOC", action: () => setModalOpen(false) }]
+  });
+  saveState();
+}
+
+function loseBattle() {
+  if (!activeBattle) {
+    return;
+  }
+
+  state.tempo = clamp(state.tempo - 10, 0, 999);
+  state.morale = clamp(state.morale - 2, 0, 99);
+  const battle = activeBattle;
+  updateHud();
+  saveState();
+
+  showDialogueBox({
+    speaker: battle.name,
+    role: "Staff Reset",
+    portrait: portraits.get("player"),
+    kicker: "Friction Won The Round",
+    lines: [
+      "The staff loses focus, regroups, and writes one very honest note for the after action review.",
+      "Tempo -10, Morale -2. You can retry the fight."
+    ],
+    choices: [
+      {
+        label: "Retry the battle",
+        action: () => startBattle({
+          name: battle.name,
+          maxHp: battle.maxHp,
+          weakness: battle.weakness,
+          attacks: battle.attacks,
+          reward: battle.reward
+        }, battle.missionId ? missionById.get(battle.missionId) : null)
+      },
+      { label: "Back to the TOC", action: () => setModalOpen(false) }
+    ]
+  });
+}
+
+function completeMission(missionId) {
+  const mission = missionById.get(missionId);
+  if (!mission) {
+    return;
+  }
+
+  if (!state.completed.includes(missionId)) {
+    state.completed.push(missionId);
+  }
+
+  if (state.missionIndex < MISSIONS.length && MISSIONS[state.missionIndex]?.id === missionId) {
+    state.missionIndex += 1;
+  }
+
+  activeScene?.refreshMissionMarker();
+  updateHud();
+  updateJournal();
+  saveState();
+
+  const next = currentMission();
+  if (!next) {
+    state.finalShown = true;
+    saveState();
+    showFinalDebrief();
+    return;
+  }
+
+  const nextNpc = npcById.get(next.npc);
+  showDialogueBox({
+    speaker: mission.title,
+    role: `Level ${mission.level} Complete`,
+    portrait: portraits.get("player"),
+    kicker: "Mission Complete",
+    lines: [
+      mission.completion,
+      `Next: ${next.title}. Find ${nextNpc?.name || "the next staff lead"}.`
+    ],
+    choices: [{ label: "Back to the TOC", action: () => setModalOpen(false) }]
+  });
+}
+
+function showFinalDebrief() {
+  showDialogueBox({
+    speaker: "CPT Berget",
+    role: "Staff Lead",
+    portrait: portraits.get("player"),
+    kicker: "Final Debrief",
+    lines: [
+      "The battalion sync ended with decisions, owners, and a shared understanding of the fight.",
+      `Final Staff Credibility: ${state.credibility}. The TOC is still loud, but now it is loud in formation.`,
+      "Training complete. You can keep exploring, talk to the staff, or clear the save and try a different build."
+    ],
+    choices: [
+      { label: "Keep exploring", action: () => setModalOpen(false) },
+      { label: "Start over", action: () => resetToStart() }
+    ]
+  });
+}
+
+function startRandomEncounter() {
+  if (!state.started || state.modalOpen || activeBattle || state.missionIndex <= 0 || state.missionIndex >= MISSIONS.length) {
+    return;
+  }
+  const encounter = RANDOM_ENCOUNTERS[randomBetween(0, RANDOM_ENCOUNTERS.length - 1)];
+  startBattle(encounter, null);
+}
+
+function jumpToMission(level, persist = true) {
+  const mission = MISSIONS[level - 1];
+  if (!mission) {
+    return false;
+  }
+
+  const npc = npcById.get(mission.npc);
+  state.started = true;
+  state.missionIndex = level - 1;
+  state.completed = MISSIONS.slice(0, level - 1).map((item) => item.id);
+  state.modalOpen = false;
+  if (npc) {
+    state.player = { x: npc.x, y: npc.y + 24 };
+  }
+  dom.start.hidden = true;
+  updateHud();
+  updateJournal();
+  activeScene?.resetPlayerPosition(state.player.x, state.player.y);
+  activeScene?.refreshMissionMarker();
+  if (persist) {
+    saveState();
+  }
+  return true;
+}
+
+function openCurrentMissionForTest() {
+  const mission = currentMission();
+  if (!mission) {
+    return false;
+  }
+  showMissionDialogue(npcById.get(mission.npc), mission);
+  return true;
+}
+
+function applyTestRoute() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedMission = Number(params.get("mission"));
+  if (!requestedMission) {
+    return;
+  }
+
+  if (params.get("fresh") === "1") {
+    clearSave();
+  }
+
+  window.setTimeout(() => {
+    const jumped = jumpToMission(requestedMission, false);
+    if (jumped && params.get("open") === "1") {
+      openCurrentMissionForTest();
+    }
+  }, 350);
+}
+
+function updateHud() {
+  const mission = currentMission();
+  if (mission) {
+    const npc = npcById.get(mission.npc);
+    dom.missionChip.innerHTML = `
+      <strong>Level ${mission.level}: ${escapeHtml(mission.title)}</strong>
+      <p>${escapeHtml(mission.objective)}</p>
+      <p>Find ${escapeHtml(npc?.name || "the staff lead")} (${escapeHtml(npc?.role || "Staff")}).</p>
+    `;
+  } else {
+    dom.missionChip.innerHTML = `
+      <strong>Staff Lead Complete</strong>
+      <p>The battalion sync is complete. Explore the TOC or start over from the opening screen.</p>
+    `;
+  }
+
+  dom.resourceGrid.innerHTML = [
+    ["Credibility", state.credibility],
+    ["Tempo", state.tempo],
+    ["Morale", state.morale],
+    ["Coffee", state.coffee]
+  ].map(([label, value]) => `
+    <div class="resource">
+      <span>${label}</span>
+      <b>${value}</b>
+    </div>
+  `).join("");
+
+  dom.statStrip.innerHTML = PLAYER_STATS.map((stat) => {
+    const value = state.stats[stat.id] || 1;
+    return `
+      <div class="stat-pill">
+        <span>${escapeHtml(stat.short)}</span>
+        <div class="bar"><i style="width: ${value * 20}%"></i></div>
+        <b>${value}</b>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateJournal() {
+  const missionItems = MISSIONS.map((mission) => {
+    const status = state.completed.includes(mission.id)
+      ? "Complete"
+      : state.missionIndex === mission.level - 1
+        ? "Current"
+        : "Locked";
+    return `<li><strong>${mission.level}. ${escapeHtml(mission.title)}</strong><br>${escapeHtml(status)} - ${escapeHtml(mission.lesson)}</li>`;
+  }).join("");
+
+  const rosterItems = NPCS.map((npc) => {
+    const mission = npc.mission ? missionById.get(npc.mission) : null;
+    const marker = mission ? ` Mission: ${mission.title}.` : "";
+    return `<li><strong>${escapeHtml(npc.name)}</strong> - ${escapeHtml(npc.role)}.${escapeHtml(marker)}</li>`;
+  }).join("");
+
+  dom.journalBody.innerHTML = `
+    <section class="journal-section">
+      <h3>Missions</h3>
+      <ul class="journal-list">${missionItems}</ul>
+    </section>
+    <section class="journal-section">
+      <h3>Roster</h3>
+      <ul class="journal-list">${rosterItems}</ul>
+    </section>
+  `;
+}
+
+function createTexture(scene, key, width, height, draw) {
+  if (scene.textures.exists(key)) {
+    return;
+  }
+  const texture = scene.textures.createCanvas(key, width, height);
+  const ctx = texture.getContext();
+  ctx.imageSmoothingEnabled = false;
+  draw(ctx);
+  texture.refresh();
+}
+
+function makeTextures(scene) {
+  const rect = (ctx, x, y, w, h, color) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+  };
+
+  createTexture(scene, "grass", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#6fa66a");
+    rect(ctx, 2, 3, 2, 2, "#7eb978");
+    rect(ctx, 11, 7, 2, 2, "#4e874f");
+    rect(ctx, 6, 13, 3, 1, "#93c978");
+  });
+  createTexture(scene, "grass-dark", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#507a4f");
+    rect(ctx, 4, 4, 2, 2, "#6fa66a");
+    rect(ctx, 12, 12, 2, 1, "#31543a");
+  });
+  createTexture(scene, "dirt", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#b18b5b");
+    rect(ctx, 3, 4, 4, 1, "#8e6a43");
+    rect(ctx, 10, 11, 3, 1, "#d2aa70");
+  });
+  createTexture(scene, "floor", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#b9c48b");
+    rect(ctx, 0, 15, 16, 1, "#889260");
+    rect(ctx, 15, 0, 1, 16, "#889260");
+  });
+  createTexture(scene, "wall", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#344333");
+    rect(ctx, 0, 0, 16, 3, "#71845b");
+    rect(ctx, 0, 13, 16, 3, "#1d2a24");
+    rect(ctx, 3, 5, 10, 5, "#54684c");
+  });
+  createTexture(scene, "tree", 16, 24, (ctx) => {
+    rect(ctx, 6, 14, 4, 10, "#6b4327");
+    rect(ctx, 3, 8, 10, 8, "#2f6845");
+    rect(ctx, 1, 4, 14, 8, "#3f8557");
+    rect(ctx, 4, 0, 8, 7, "#5aa468");
+    rect(ctx, 2, 20, 12, 3, "rgba(0,0,0,0.22)");
+  });
+  createTexture(scene, "table", 32, 16, (ctx) => {
+    rect(ctx, 0, 0, 32, 16, "#806244");
+    rect(ctx, 2, 2, 28, 10, "#c29457");
+    rect(ctx, 5, 4, 8, 5, "#7fb1b8");
+    rect(ctx, 17, 4, 10, 5, "#f3edc4");
+  });
+  createTexture(scene, "desk", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#7b5b3c");
+    rect(ctx, 2, 2, 12, 5, "#bc8b51");
+    rect(ctx, 3, 9, 10, 4, "#4c3a2a");
+  });
+  createTexture(scene, "radio", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#263349");
+    rect(ctx, 2, 2, 12, 8, "#43536d");
+    rect(ctx, 4, 4, 4, 2, "#9ee493");
+    rect(ctx, 10, 4, 2, 2, "#d6a84f");
+    rect(ctx, 13, 0, 1, 12, "#101820");
+  });
+  createTexture(scene, "screen", 32, 20, (ctx) => {
+    rect(ctx, 0, 0, 32, 20, "#1c2724");
+    rect(ctx, 3, 3, 26, 12, "#7fb1b8");
+    rect(ctx, 5, 5, 8, 1, "#f3edc4");
+    rect(ctx, 5, 8, 13, 1, "#386345");
+    rect(ctx, 20, 5, 5, 5, "#b85f4a");
+    rect(ctx, 11, 17, 10, 2, "#101820");
+  });
+  createTexture(scene, "crate", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#9a7247");
+    rect(ctx, 2, 2, 12, 12, "#c18c52");
+    rect(ctx, 2, 7, 12, 2, "#6e4d31");
+    rect(ctx, 7, 2, 2, 12, "#6e4d31");
+  });
+  createTexture(scene, "tent", 48, 32, (ctx) => {
+    rect(ctx, 0, 18, 48, 10, "rgba(0,0,0,0.18)");
+    rect(ctx, 3, 12, 42, 16, "#5c744b");
+    rect(ctx, 12, 4, 24, 24, "#78925e");
+    rect(ctx, 22, 14, 4, 14, "#263728");
+    rect(ctx, 4, 26, 40, 3, "#2f4232");
+  });
+  createTexture(scene, "humvee", 48, 24, (ctx) => {
+    rect(ctx, 2, 8, 44, 10, "#596b3e");
+    rect(ctx, 9, 4, 23, 8, "#75864c");
+    rect(ctx, 13, 6, 8, 4, "#8eb7bc");
+    rect(ctx, 34, 7, 8, 5, "#4a5b39");
+    rect(ctx, 7, 17, 8, 5, "#171717");
+    rect(ctx, 33, 17, 8, 5, "#171717");
+  });
+  createTexture(scene, "coffee", 16, 16, (ctx) => {
+    rect(ctx, 0, 0, 16, 16, "#433023");
+    rect(ctx, 4, 5, 8, 8, "#f3edc4");
+    rect(ctx, 11, 7, 3, 4, "#f3edc4");
+    rect(ctx, 5, 4, 6, 1, "#ffffff");
+    rect(ctx, 6, 1, 1, 3, "#d6a84f");
+    rect(ctx, 9, 1, 1, 3, "#d6a84f");
+  });
+
+  ["down", "up", "side"].forEach((facing) => {
+    createTexture(scene, `player-${facing}`, 16, 22, (ctx) => drawPerson(ctx, playerColors(), facing));
+  });
+
+  NPCS.forEach((npc) => {
+    createTexture(scene, `npc-${npc.id}`, 16, 22, (ctx) => drawPerson(ctx, npc));
+  });
+}
+
+class StaffQuestScene extends Phaser.Scene {
+  constructor() {
+    super("StaffQuestScene");
+    this.npcSprites = new Map();
+    this.nextEncounterAt = 18000;
+  }
+
+  create() {
+    activeScene = this;
+    makeTextures(this);
+    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.blockers = this.physics.add.staticGroup();
+    this.createMap();
+    this.createNpcs();
+    this.player = this.physics.add.sprite(state.player.x, state.player.y, "player-down");
+    this.player.setSize(10, 9);
+    this.player.setOffset(3, 12);
+    this.player.setCollideWorldBounds(true);
+    this.physics.add.collider(this.player, this.blockers);
+    this.physics.add.collider(this.player, this.npcGroup);
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.setZoom(1.25);
+    this.keys = this.input.keyboard.addKeys("W,A,S,D,E,SPACE,ENTER");
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.missionMarker = this.add.text(0, 0, "!", {
+      fontFamily: "Courier New",
+      fontSize: "18px",
+      fontStyle: "bold",
+      color: "#fff7d8",
+      backgroundColor: "#b85f4a",
+      padding: { left: 4, right: 4, top: 1, bottom: 1 }
+    }).setDepth(50).setOrigin(0.5, 1);
+    this.refreshMissionMarker();
+    updateHud();
+    updateJournal();
+  }
+
+  createMap() {
+    for (let x = 0; x < WORLD_WIDTH; x += TILE) {
+      for (let y = 0; y < WORLD_HEIGHT; y += TILE) {
+        const key = (x + y) % 64 === 0 ? "grass-dark" : "grass";
+        this.add.image(x, y, key).setOrigin(0);
+      }
+    }
+
+    const floorRect = { x1: 5, y1: 4, x2: 36, y2: 22 };
+    for (let x = floorRect.x1; x <= floorRect.x2; x += 1) {
+      for (let y = floorRect.y1; y <= floorRect.y2; y += 1) {
+        this.add.image(x * TILE, y * TILE, "floor").setOrigin(0);
+      }
+    }
+
+    for (let x = floorRect.x1; x <= floorRect.x2; x += 1) {
+      this.addBlocker(x * TILE, floorRect.y1 * TILE, "wall");
+      if (x < 17 || x > 23) {
+        this.addBlocker(x * TILE, floorRect.y2 * TILE, "wall");
+      }
+    }
+    for (let y = floorRect.y1; y <= floorRect.y2; y += 1) {
+      this.addBlocker(floorRect.x1 * TILE, y * TILE, "wall");
+      this.addBlocker(floorRect.x2 * TILE, y * TILE, "wall");
+    }
+
+    this.placePath(18, 22, 18, 31);
+    this.placePath(18, 31, 58, 31);
+    this.placePath(58, 8, 58, 31);
+    this.placePath(36, 13, 58, 13);
+    this.placePath(8, 31, 18, 31);
+
+    [
+      [15, 9, "table"], [21, 9, "table"], [20, 15, "table"], [26, 16, "table"],
+      [10, 14, "desk"], [13, 14, "radio"], [31, 8, "screen"], [28, 8, "screen"],
+      [12, 19, "desk"], [17, 18, "crate"], [25, 19, "coffee"], [30, 18, "desk"],
+      [32, 14, "desk"], [8, 8, "radio"], [8, 10, "screen"]
+    ].forEach(([tx, ty, key]) => this.addBlocker(tx * TILE, ty * TILE, key));
+
+    [
+      [41, 7, "tent"], [46, 8, "tent"], [52, 19, "tent"], [8, 27, "tent"],
+      [43, 28, "humvee"], [51, 33, "humvee"], [31, 30, "crate"], [34, 30, "crate"],
+      [53, 25, "crate"], [55, 25, "crate"], [9, 34, "crate"]
+    ].forEach(([tx, ty, key]) => this.addBlocker(tx * TILE, ty * TILE, key));
+
+    const treeTiles = [
+      [2, 2], [4, 7], [2, 16], [4, 24], [4, 35], [8, 38], [15, 37],
+      [24, 35], [30, 37], [39, 37], [47, 39], [57, 38], [61, 32],
+      [62, 24], [61, 17], [61, 7], [56, 3], [49, 3], [39, 2],
+      [2, 30], [13, 2], [22, 2], [32, 2], [44, 18], [49, 18]
+    ];
+    treeTiles.forEach(([tx, ty]) => this.addBlocker(tx * TILE, ty * TILE, "tree"));
+
+    this.add.text(118, 88, "BATTALION TOC", {
+      fontFamily: "Courier New",
+      fontSize: "12px",
+      color: "#17251f",
+      backgroundColor: "#f3edc4",
+      padding: { left: 4, right: 4, top: 2, bottom: 2 }
+    }).setDepth(2);
+    this.add.text(710, 80, "FLATHEAD VALLEY", {
+      fontFamily: "Courier New",
+      fontSize: "12px",
+      color: "#fff7d8",
+      backgroundColor: "#386345",
+      padding: { left: 4, right: 4, top: 2, bottom: 2 }
+    }).setDepth(2);
+  }
+
+  placePath(x1, y1, x2, y2) {
+    const startX = Math.min(x1, x2);
+    const endX = Math.max(x1, x2);
+    const startY = Math.min(y1, y2);
+    const endY = Math.max(y1, y2);
+    for (let x = startX; x <= endX; x += 1) {
+      for (let y = startY; y <= endY; y += 1) {
+        this.add.image(x * TILE, y * TILE, "dirt").setOrigin(0).setDepth(1);
+      }
+    }
+  }
+
+  addBlocker(x, y, key) {
+    const image = this.physics.add.staticImage(x, y, key).setOrigin(0).setDepth(4);
+    this.blockers.add(image);
+    image.refreshBody();
+    return image;
+  }
+
+  createNpcs() {
+    this.npcGroup = this.physics.add.staticGroup();
+    NPCS.forEach((npc) => {
+      const sprite = this.physics.add.staticSprite(npc.x, npc.y, `npc-${npc.id}`);
+      sprite.setSize(10, 9);
+      sprite.setOffset(3, 12);
+      sprite.setDepth(20);
+      sprite.npcId = npc.id;
+      this.npcGroup.add(sprite);
+      this.npcSprites.set(npc.id, sprite);
+
+      this.add.text(npc.x, npc.y + 16, npc.role, {
+        fontFamily: "Courier New",
+        fontSize: "8px",
+        color: "#fff7d8",
+        backgroundColor: "rgba(23,37,31,0.74)",
+        padding: { left: 2, right: 2, top: 1, bottom: 1 }
+      }).setOrigin(0.5, 0).setDepth(19);
+    });
+  }
+
+  resetPlayerPosition(x, y) {
+    if (!this.player) {
+      return;
+    }
+    this.player.setPosition(x, y);
+    this.cameras.main.centerOn(x, y);
+    this.refreshMissionMarker();
+  }
+
+  refreshMissionMarker() {
+    if (!this.missionMarker) {
+      return;
+    }
+    const mission = currentMission();
+    if (!mission) {
+      this.missionMarker.setVisible(false);
+      return;
+    }
+    const target = this.npcSprites.get(mission.npc);
+    if (!target) {
+      this.missionMarker.setVisible(false);
+      return;
+    }
+    this.missionMarker.setVisible(true);
+    this.missionMarker.setPosition(target.x, target.y - 13);
+  }
+
+  nearestNpc() {
+    let nearest = null;
+    let nearestDistance = 999;
+    this.npcSprites.forEach((sprite, npcId) => {
+      const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = { npcId, distance };
+      }
+    });
+    return nearestDistance <= 34 ? nearest : null;
+  }
+
+  update(time) {
+    if (!this.player) {
+      return;
+    }
+
+    if (!state.started || state.modalOpen) {
+      this.player.setVelocity(0, 0);
+      setPrompt("");
+      return;
+    }
+
+    const left = this.cursors.left.isDown || this.keys.A.isDown;
+    const right = this.cursors.right.isDown || this.keys.D.isDown;
+    const up = this.cursors.up.isDown || this.keys.W.isDown;
+    const down = this.cursors.down.isDown || this.keys.S.isDown;
+    const speed = 108;
+    let vx = 0;
+    let vy = 0;
+
+    if (left) vx -= 1;
+    if (right) vx += 1;
+    if (up) vy -= 1;
+    if (down) vy += 1;
+
+    if (vx !== 0 && vy !== 0) {
+      vx *= Math.SQRT1_2;
+      vy *= Math.SQRT1_2;
+    }
+
+    this.player.setVelocity(vx * speed, vy * speed);
+    if (Math.abs(vx) > Math.abs(vy) && vx !== 0) {
+      this.player.setTexture("player-side");
+      this.player.setFlipX(vx < 0);
+    } else if (vy < 0) {
+      this.player.setTexture("player-up");
+    } else if (vy > 0) {
+      this.player.setTexture("player-down");
+    }
+
+    const nearest = this.nearestNpc();
+    if (nearest) {
+      const npc = npcById.get(nearest.npcId);
+      setPrompt(`Press E / Space to talk to ${npc.name} - ${npc.role}`);
+      if (
+        Phaser.Input.Keyboard.JustDown(this.keys.E) ||
+        Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
+        Phaser.Input.Keyboard.JustDown(this.keys.ENTER)
+      ) {
+        state.player.x = Math.round(this.player.x);
+        state.player.y = Math.round(this.player.y);
+        saveState();
+        showDialogue(nearest.npcId);
+      }
+    } else {
+      setPrompt("");
+    }
+
+    if (vx !== 0 || vy !== 0) {
+      state.player.x = Math.round(this.player.x);
+      state.player.y = Math.round(this.player.y);
+      if (time > this.nextEncounterAt) {
+        this.nextEncounterAt = time + randomBetween(18000, 32000);
+        if (randomBetween(1, 100) <= 16) {
+          startRandomEncounter();
+        }
+      }
+    }
+  }
+}
+
+function bootGame() {
+  new Phaser.Game({
+    type: Phaser.AUTO,
+    parent: "game",
+    width: 640,
+    height: 384,
+    backgroundColor: "#17251f",
+    pixelArt: true,
+    roundPixels: true,
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    physics: {
+      default: "arcade",
+      arcade: {
+        debug: false
+      }
+    },
+    scene: [StaffQuestScene]
+  });
+}
+
+function bindUi() {
+  dom.statBuilder.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-stat]");
+    if (!button) {
+      return;
+    }
+    const stat = button.dataset.stat;
+    const dir = Number(button.dataset.dir);
+    const pointsSpent = Object.values(draftStats).reduce((sum, value) => sum + value - 1, 0);
+    const pointsLeft = STARTING_POINTS - pointsSpent;
+    if (dir > 0 && (pointsLeft <= 0 || draftStats[stat] >= 5)) {
+      return;
+    }
+    if (dir < 0 && draftStats[stat] <= 1) {
+      return;
+    }
+    draftStats[stat] += dir;
+    renderStatBuilder();
+  });
+
+  dom.startButton.addEventListener("click", beginNewGame);
+  dom.continueButton.addEventListener("click", continueSavedGame);
+  dom.resetSaveButton.addEventListener("click", resetToStart);
+  dom.journalToggle.addEventListener("click", () => {
+    updateJournal();
+    dom.journal.hidden = false;
+  });
+  dom.journalClose.addEventListener("click", () => {
+    dom.journal.hidden = true;
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      if (!dom.journal.hidden) {
+        dom.journal.hidden = true;
+      } else if (!dom.modal.hidden) {
+        setModalOpen(false);
+      }
+    }
+  });
+}
+
+function init() {
+  bindUi();
+  renderStatBuilder();
+  updateStartButtons();
+  updateHud();
+  updateJournal();
+  bootGame();
+  applyTestRoute();
+}
+
+window.staffQuestDebug = {
+  getState: () => JSON.parse(JSON.stringify(state)),
+  missions: MISSIONS,
+  npcs: NPCS,
+  start: () => beginNewGame(),
+  reset: () => resetToStart(),
+  jumpToMission,
+  openCurrentMission: openCurrentMissionForTest,
+  runContentSelfTest: () => {
+    const errors = [];
+    MISSIONS.forEach((mission, index) => {
+      if (mission.level !== index + 1) errors.push(`${mission.title} has wrong level`);
+      if (!npcById.has(mission.npc)) errors.push(`${mission.title} has missing NPC`);
+      if (!mission.puzzle.answers.some((answer) => answer.correct)) errors.push(`${mission.title} has no correct answer`);
+      if (!PLAYER_STATS.some((stat) => stat.id === mission.battle.weakness)) errors.push(`${mission.title} has invalid weakness`);
+    });
+    return { ok: errors.length === 0, errors };
+  }
+};
+
+init();
+
+    </script>
+  </body>
+</html>
